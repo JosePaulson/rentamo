@@ -1,19 +1,41 @@
 'use client'
 import Image from 'next/image';
-import logo from '@/assets/images/logo.png';
-import profileDefault from '@/assets/images/empty-profile.webp';
 import Link from 'next/link';
-import { FaGoogle } from 'react-icons/fa'
-import { useState } from 'react';
+import { FaGoogle, FaUser } from 'react-icons/fa'
+import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 const Navbar = () => {
+  const pathname = usePathname()
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+
+  const dropdownRef = useRef(null)
+  const dropRef = useRef(null)
+
+  useEffect(() => {
+    if (!isProfileMenuOpen && !isDropdownMenuOpen) return
+
+    function handleClick(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsProfileMenuOpen(false)
+      }
+
+      if (dropRef.current && !dropRef.current.contains(e.target)) {
+        setIsDropdownMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('click', handleClick)
+
+    return () => window.removeEventListener('click', handleClick)
+  }, [isProfileMenuOpen, isDropdownMenuOpen])
+
   return (
-    <nav className='bg-blue-700 border-b border-blue-500'>
+    <nav className='bg-orange-800 border-b border-orange-600'>
       <div className='px-2 mx-auto max-w-7xl sm:px-6 lg:px-8'>
-        <div className='relative flex items-center justify-between h-20'>
-          <div className='absolute inset-y-0 left-0 flex items-center md:hidden'>
+        <div className='relative flex items-center justify-between h-16'>
+          <div ref={dropRef} className='absolute inset-y-0 left-0 flex items-center md:hidden'>
             {/* <!-- Mobile menu button--> */}
             <button
               onClick={() => setIsDropdownMenuOpen((prev) => !prev)}
@@ -45,10 +67,8 @@ const Navbar = () => {
           <div className='flex items-center justify-center flex-1 md:items-stretch md:justify-start'>
             {/* <!-- Logo --> */}
             <Link className='flex items-center flex-shrink-0' href='/'>
-              <Image className='w-auto h-10' src={logo} alt='PropertyPulse' />
-
               <span className='hidden ml-2 text-2xl font-bold text-white md:block'>
-                PropertyPulse
+                Rentomo
               </span>
             </Link>
             {/* <!-- Desktop Menu Hidden below md screens --> */}
@@ -56,19 +76,19 @@ const Navbar = () => {
               <div className='flex space-x-2'>
                 <Link
                   href='/'
-                  className='px-3 py-2 text-white bg-black rounded-md hover:bg-gray-900 hover:text-white'
+                  className={`${pathname === '/' ? 'bg-black' : ''} px-3 py-2 text-white rounded-md hover:bg-gray-900 hover:text-white`}
                 >
                   Home
                 </Link>
                 <Link
                   href='/properties'
-                  className='px-3 py-2 text-white rounded-md hover:bg-gray-900 hover:text-white'
+                  className={`${pathname === '/properties' ? 'bg-black' : ''} px-3 py-2 text-white rounded-md hover:bg-gray-900 hover:text-white`}
                 >
                   Properties
                 </Link>
                 <Link
                   href='/properties/add'
-                  className='px-3 py-2 text-white rounded-md hover:bg-gray-900 hover:text-white'
+                  className={`${pathname === '/properties/add' ? 'bg-black' : ''} px-3 py-2 text-white rounded-md hover:bg-gray-900 hover:text-white`}
                 >
                   Add Property
                 </Link>
@@ -116,23 +136,16 @@ const Navbar = () => {
               </span>
             </Link>
             {/* <!-- Profile dropdown button --> */}
-            <div className='relative ml-3'>
+            <div ref={dropdownRef} className='relative order-2 ml-3 rounded-full'>
               <div>
                 <button
                   onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                   type='button'
-                  className='relative flex text-sm bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
-                  id='user-menu-button'
-                  aria-expanded='false'
-                  aria-haspopup='true'
+                  className='relative p-1.5 text-gray-400 bg-gray-800 rounded-full hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
                 >
                   <span className='absolute -inset-1.5'></span>
                   <span className='sr-only'>Open user menu</span>
-                  <Image
-                    className='w-8 h-8 rounded-full'
-                    src={profileDefault}
-                    alt=''
-                  />
+                  <FaUser className='w-[20px] h-[20px]' />
                 </button>
               </div>
 
