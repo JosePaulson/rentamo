@@ -1,6 +1,8 @@
 import React from 'react'
 import Navbar from '@/components/Navbar'
 import '@/assets/styles/globals.css'
+import Footer from '@/components/Footer'
+import AuthProvider from '@/components/AuthProvider'
 
 export const metadata = {
 	title: "Rentomo | Find the perfect home rental",
@@ -10,12 +12,15 @@ export const metadata = {
 
 const MainLayout = ({ children }) => {
 	return (
-		<html lang='en'>
-			<body>
-				<Navbar />
-				<div>{children}</div>
-			</body>
-		</html>
+		<AuthProvider>
+			<html lang='en'>
+				<body>
+					<Navbar />
+					<div>{children}</div>
+					<Footer />
+				</body>
+			</html>
+		</AuthProvider>
 	)
 }
 

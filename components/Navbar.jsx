@@ -1,14 +1,18 @@
 'use client'
-import Image from 'next/image';
 import Link from 'next/link';
 import { FaGoogle, FaUser } from 'react-icons/fa'
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { signIn, signOut, getProviders, useSession } from 'next-auth/react'
+import Image from 'next/image';
 
 const Navbar = () => {
   const pathname = usePathname()
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+
+  const { data: session } = useSession()
+  const [providers, setProviders] = useState(false)
 
   const dropdownRef = useRef(null)
   const dropRef = useRef(null)
@@ -31,10 +35,19 @@ const Navbar = () => {
     return () => window.removeEventListener('click', handleClick)
   }, [isProfileMenuOpen, isDropdownMenuOpen])
 
+  useEffect(() => {
+    const setAuthProviders = async () => {
+      const res = await getProviders()
+      setProviders(res)
+    }
+
+    setAuthProviders()
+  }, [])
+
   return (
-    <nav className='bg-orange-800 border-b border-orange-600'>
+    <nav className='bg-green-700'>
       <div className='px-2 mx-auto max-w-7xl sm:px-6 lg:px-8'>
-        <div className='relative flex items-center justify-between h-16'>
+        <div className='relative flex items-center justify-between h-20'>
           <div ref={dropRef} className='absolute inset-y-0 left-0 flex items-center md:hidden'>
             {/* <!-- Mobile menu button--> */}
             <button
@@ -86,37 +99,40 @@ const Navbar = () => {
                 >
                   Properties
                 </Link>
-                <Link
+                {session && <Link
                   href='/properties/add'
                   className={`${pathname === '/properties/add' ? 'bg-black' : ''} px-3 py-2 text-white rounded-md hover:bg-gray-900 hover:text-white`}
                 >
                   Add Property
-                </Link>
+                </Link>}
               </div>
             </div>
           </div>
 
           {/* <!-- Right Side Menu (Logged Out) --> */}
-          <div className='hidden md:block md:ml-6'>
+          {!session && <div className='hidden md:block md:ml-6'>
             <div className='flex items-center'>
-              <button className='flex items-center px-3 py-2 text-white bg-gray-700 rounded-md hover:bg-gray-900 hover:text-white'>
-                <FaGoogle className='mr-2 text-white' />
-                <span>Login or Register</span>
-              </button>
+              {providers && Object.values(providers).map((provider) => (
+
+                <button key={provider.id} onClick={() => signIn(provider.id)} className='flex items-center px-3 py-2 text-white bg-gray-700 rounded-md hover:bg-gray-900 hover:text-white'>
+                  <FaGoogle className='mr-2 text-white' />
+                  <span>Login or Register</span>
+                </button>
+              ))}
             </div>
-          </div>
+          </div>}
 
           {/* <!-- Right Side Menu (Logged In) --> */}
-          <div className='absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto md:ml-6 md:pr-0'>
+          {session && <div className='absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto md:ml-6 md:pr-0'>
             <Link href='/messages' className='relative group'>
               <button
                 type='button'
-                className='relative p-1 text-gray-400 bg-gray-800 rounded-full hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
+                className='size-[32px] flex justify-center items-center relative text-gray-400 bg-gray-800 rounded-full hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
               >
                 <span className='absolute -inset-1.5'></span>
                 <span className='sr-only'>View notifications</span>
                 <svg
-                  className='w-6 h-6'
+                  className='size-6'
                   fill='none'
                   viewBox='0 0 24 24'
                   strokeWidth='1.5'
@@ -141,11 +157,12 @@ const Navbar = () => {
                 <button
                   onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                   type='button'
-                  className='relative p-1.5 text-gray-400 bg-gray-800 rounded-full hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
+                  className='relative text-gray-400 size-[32px] bg-gray-800 rounded-full hover:text-white focus:outline-none focus:ring-2 flex justify-center items-center focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
                 >
-                  <span className='absolute -inset-1.5'></span>
+                  <span className='absolute -inset-1.5 rounded-full overflow-hidden'></span>
                   <span className='sr-only'>Open user menu</span>
-                  <FaUser className='w-[20px] h-[20px]' />
+                  {<Image width={32} height={32} src={session.user.image} className='rounded-full' alt={session?.user?.name} /> ||
+                    <FaUser className='size-[22px]' />}
                 </button>
               </div>
 
@@ -160,6 +177,7 @@ const Navbar = () => {
                   tabIndex='-1'
                 >
                   <Link
+                    onClick={() => setIsProfileMenuOpen(false)}
                     href='/profile'
                     className='block px-4 py-2 text-sm text-gray-700'
                     role='menuitem'
@@ -169,6 +187,7 @@ const Navbar = () => {
                     Your Profile
                   </Link>
                   <Link
+                    onClick={() => setIsProfileMenuOpen(false)}
                     href='/saved-properties'
                     className='block px-4 py-2 text-sm text-gray-700'
                     role='menuitem'
@@ -178,6 +197,10 @@ const Navbar = () => {
                     Saved Properties
                   </Link>
                   <button
+                    onClick={() => {
+                      setIsDropdownMenuOpen(false)
+                      signOut()
+                    }}
                     className='block px-4 py-2 text-sm text-gray-700'
                     role='menuitem'
                     tabIndex='-1'
@@ -188,7 +211,7 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div>}
         </div>
       </div>
 
@@ -198,30 +221,32 @@ const Navbar = () => {
           <div className='px-2 pt-2 pb-3 space-y-1'>
             <Link
               href='/'
-              className='block px-3 py-2 text-base font-medium text-white bg-gray-900 rounded-md'
+              className={`${pathname === '/' ? 'bg-black' : ''} block px-3 py-2 text-base font-medium text-white rounded-md`}
             >
               Home
             </Link>
             <Link
               href='/properties'
-              className='block px-3 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white'
+              className={`${pathname === '/properties' ? 'bg-black' : ''} block px-3 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white`}
             >
               Properties
             </Link>
-            <Link
+            {session && <Link
               href='/properties/add'
-              className='block px-3 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white'
+              className={`${pathname === '/properties/add' ? 'bg-black' : ''} block px-3 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white`}
             >
               Add Property
-            </Link>
-            <button className='flex items-center px-3 py-2 my-4 text-white bg-gray-700 rounded-md hover:bg-gray-900 hover:text-white'>
-              <FaGoogle className='mr-2 text-white' />
-              <span>Login or Register</span>
-            </button>
+            </Link>}
+            {(!session && providers) && Object.values(providers).map(provider => (
+              <button key={provider.id} onClick={() => signIn(provider.id)} className='flex items-center px-3 py-2 my-4 text-white bg-gray-700 rounded-md hover:bg-gray-900 hover:text-white'>
+                <FaGoogle className='mr-2 text-white' />
+                <span>Login or Register</span>
+              </button>
+            ))}
           </div>
         )}
       </div>
-    </nav>
+    </nav >
   );
 };
 export default Navbar;
