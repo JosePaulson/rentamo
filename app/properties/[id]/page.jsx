@@ -1,7 +1,9 @@
 'use client'
 import PropertyHeaderImage from '@/components/PropertyHeaderImage'
+import PropertyMap from '@/components/PropertyMap'
 import Spinner from '@/components/Spinner'
 import { fetchProperty } from '@/utils/requests'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
@@ -11,13 +13,11 @@ const propertyPage = () => {
 	const [property, setProperty] = useState()
 	const [isLoading, setIsLoading] = useState(true)
 	const { id } = useParams()
-	console.log(property?.images[0])
 	useEffect(() => {
 		const fetchPropertyById = async (id) => {
 			try {
 				const property = await fetchProperty(id)
 				setProperty(property)
-				console.log(property)
 			} catch (error) {
 				console.error('Error loading property, try again')
 			} finally {
@@ -140,10 +140,14 @@ const propertyPage = () => {
 											))}
 										</ul>
 									</div>
-
 									<div className='p-6 mt-6 bg-white rounded-lg shadow-md'>
-										<div id='map'></div>
+										<PropertyMap currentLoc={property.lngLat} />
 									</div>
+									{property.images.length > 1 && <div className='p-6 mt-6 bg-white rounded-lg shadow-md'>
+										<div className='flex' id='map'>{property.images.filter((image, idx) => idx !== 0).map(image => <div key={image}>
+											<Image width={200} height={200} src={image} alt='' />
+										</div>)}</div>
+									</div>}
 								</main>
 
 								{/* <!-- Sidebar --> */}

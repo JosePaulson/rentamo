@@ -24,47 +24,16 @@ export const POST = async (request) => {
 	if (!session) {
 		return new Response('Unauthorized', { status: 401 })
 	}
-
-	const formData = await request.formData()
-	const amenities = formData.getAll('amenities')
-	console.log(formData.get('seller_name'))
-	const images = formData.getAll('images')
-
+	const formData = await request.json()
+	// console.log(formData)
 	const propertyData = {
-		property_type: formData.get('property_type'),
-		name: formData.get('name'),
-		description: formData.get('description'),
-		location: {
-			street: formData.get('street'),
-			city: formData.get('city'),
-			state: formData.get('state'),
-			zipcode: formData.get('zipcode'),
-		},
-		beds: formData.get('beds'),
-		baths: formData.get('baths'),
-		square_feet: formData.get('square_feet'),
-		amenities,
-		rates: {
-			weekly: formData.get('weekly'),
-			monthly: formData.get('monthly'),
-			nightly: formData.get('nightly'),
-		},
-		seller: {
-			seller_name: formData.get('seller_name'),
-			seller_email: formData.get('seller_email'),
-			seller_phone: formData.get('seller_phone'),
-		},
+		...formData,
 		owner: session.user.id,
 	}
+
 	try {
 		let imageUrlPromises = []
-		for (const image of images) {
-			const imgBuffer = await image.arrayBuffer()
-			const imgArr = Array.from(new Uint8Array(imgBuffer))
-			const imgData = Buffer.from(imgArr)
-
-			// convert image data to base64
-			const imgBase64 = imgData.toString('base64')
+		for (const imgBase64 of formData.images) {
 
 			// upload to cloudinary
 			const result = await cloudinary.uploader.upload(`data:image/png;base64,${imgBase64}`, { folder: 'rentamo' })
@@ -75,16 +44,17 @@ export const POST = async (request) => {
 
 		// wait until all images uploaded successfull
 		const imageUrls = await Promise.all(imageUrlPromises)
-		console.log(imageUrls)
 		// add uploaded urls array to propertyData object
 		propertyData.images = imageUrls
 
 		const res = await Property.create(propertyData)
 		if (res) {
-			return Response.redirect(`${process.env.NEXTAUTH_URL}/properties/${res._id}`)
+			return new Response(JSON.stringify(res), { status: 302 })
 		} else {
 			return new Response('Something went wrong, property not added', { status: 400 })
 		}
+
+		// return new Response('property added', { status: 200 })
 	} catch (error) {
 		return new Response('ERROR', { status: 500 })
 	}
@@ -95,70 +65,42 @@ export const PUT = async (request) => {
 	await connectDB()
 	const session = await getServerSession(authOptions)
 
-	if (!session) {
+	const formData = await request.json()
+
+	if (!session && session.user.id !== formData.owner) {
 		return new Response('Unauthorized', { status: 401 })
 	}
 
-	const formData = await request.formData()
-	const amenities = formData.getAll('amenities')
-	const images = formData.getAll('images')
-	const cloudImgs = JSON.parse(formData.get('cloudImgs'))
-
-	console.log(cloudImgs)
-
 	const propertyData = {
-		property_type: formData.get('property_type'),
-		name: formData.get('name'),
-		description: formData.get('description'),
-		location: {
-			street: formData.get('street'),
-			city: formData.get('city'),
-			state: formData.get('state'),
-			zipcode: formData.get('zipcode'),
-		},
-		beds: formData.get('beds'),
-		baths: formData.get('baths'),
-		square_feet: formData.get('square_feet'),
-		amenities,
-		rates: {
-			weekly: formData.get('weekly'),
-			monthly: formData.get('monthly'),
-			nightly: formData.get('nightly'),
-		},
-		seller: {
-			seller_name: formData.get('seller_name'),
-			seller_email: formData.get('seller_email'),
-			seller_phone: formData.get('seller_phone'),
-		},
-		owner: session.user.id,
+		...formData
 	}
+	delete propertyData._id
+	delete propertyData.cloudImgs
+
 	try {
-		let imageUrlPromises = []
-		for (const image of images) {
-			const imgBuffer = await image.arrayBuffer()
-			const imgArr = Array.from(new Uint8Array(imgBuffer))
-			const imgData = Buffer.from(imgArr)
+		if (formData?.images.length) {
+			let imageUrlPromises = []
+			for (const imgBase64 of formData.images) {
 
-			// convert image data to base64
-			const imgBase64 = imgData.toString('base64')
+				// upload to cloudinary
+				const result = await cloudinary.uploader.upload(`data:image/png;base64,${imgBase64}`, { folder: 'rentamo' })
 
-			// upload to cloudinary
-			const result = await cloudinary.uploader.upload(`data:image/png;base64,${imgBase64}`, { folder: 'rentamo' })
+				// push each cloudinary url to imageUrlPromises array
+				imageUrlPromises.push(result.secure_url)
+			}
 
-			// push each cloudinary url to imageUrlPromises array
-			imageUrlPromises.push(result.secure_url)
+			// wait until all images uploaded successfull
+			const imageUrls = await Promise.all(imageUrlPromises)
+			// add uploaded urls array to propertyData object + previous images
+			propertyData.images = [...formData.cloudImgs, ...imageUrls]
+		} else {
+			// previous images already on cloudinary
+			propertyData.images = [...formData.cloudImgs]
 		}
 
-		// wait until all images uploaded successfull
-		const imageUrls = await Promise.all(imageUrlPromises)
-		console.log(imageUrls)
-		// add uploaded urls array to propertyData object
-		propertyData.images = imageUrls
-
-		// const res = await Property.create(propertyData)
+		const res = await Property.findByIdAndUpdate(formData._id, propertyData)
 		if (res) {
-			// return Response.redirect(`${process.env.NEXTAUTH_URL}/properties/${res._id}`)
-			return new Response('hello')
+			return new Response(JSON.stringify(res), { status: 302 })
 		} else {
 			return new Response('Something went wrong, property not added', { status: 400 })
 		}

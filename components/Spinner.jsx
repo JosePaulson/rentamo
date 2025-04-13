@@ -1,19 +1,17 @@
 'use client';
 import ClipLoader from 'react-spinners/ClipLoader';
 
-const override = {
-	display: 'block',
-	margin: '100px auto',
-};
-
-const Spinner = ({ loading }) => {
+const Spinner = ({ loading, margin = '100px auto', size = 50, color = '#15803d' }) => {
 	return (
-		<div className='flex items-center justify-center h-[200px]'>
+		<div className='flex items-center justify-center'>
 			<ClipLoader
-				color='#15803d'
+				color={color}
 				loading={loading}
-				cssOverride={override}
-				size={50}
+				cssOverride={{
+					display: 'block',
+					margin: margin,
+				}}
+				size={size}
 				aria-label='Loading Spinner'
 			/>
 		</div>

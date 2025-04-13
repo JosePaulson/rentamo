@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar'
 import '@/assets/styles/globals.css'
 import Footer from '@/components/Footer'
 import AuthProvider from '@/components/AuthProvider'
+import { ToastContainer } from 'react-toastify'
 
 export const metadata = {
 	title: "Rentomo | Find the perfect home rental",
@@ -18,6 +19,7 @@ const MainLayout = ({ children }) => {
 					<Navbar />
 					<div>{children}</div>
 					<Footer />
+					<ToastContainer />
 				</body>
 			</html>
 		</AuthProvider>

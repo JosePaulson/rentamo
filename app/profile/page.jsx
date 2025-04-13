@@ -6,6 +6,7 @@ import profileDefault from '@/public/images/profile.png'
 import { useEffect, useState } from 'react';
 import { deleteUserProperty, fetchUserProperties } from '@/utils/requests';
 import Spinner from '@/components/Spinner';
+import { toast } from 'react-toastify';
 
 
 const ProfilePage = () => {
@@ -41,11 +42,11 @@ const ProfilePage = () => {
 		if (!confirmed) return
 		const res = await deleteUserProperty(propertyId)
 		if (res && res.ok) {
-			alert("Property deleted")
+			toast.success("Property deleted")
 			const updatedProperties = properties.filter(property => property._id !== propertyId)
 			setProperties(updatedProperties)
 		} else {
-			alert("Property not deleted")
+			toast.error("Property not deleted")
 		}
 	}
 

@@ -18,6 +18,15 @@ const Navbar = () => {
   const dropRef = useRef(null)
 
   useEffect(() => {
+    const setAuthProviders = async () => {
+      const res = await getProviders()
+      res && setProviders(res)
+    }
+
+    setAuthProviders()
+  }, [])
+
+  useEffect(() => {
     if (!isProfileMenuOpen && !isDropdownMenuOpen) return
 
     function handleClick(e) {
@@ -35,14 +44,6 @@ const Navbar = () => {
     return () => window.removeEventListener('click', handleClick)
   }, [isProfileMenuOpen, isDropdownMenuOpen])
 
-  useEffect(() => {
-    const setAuthProviders = async () => {
-      const res = await getProviders()
-      setProviders(res)
-    }
-
-    setAuthProviders()
-  }, [])
 
   return (
     <nav className='bg-green-700'>

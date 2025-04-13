@@ -70,6 +70,14 @@ const PropertySchema = new Schema({
 			type: String
 		},
 	},
+	lngLat: {
+		longitude: {
+			type: Number
+		},
+		latitude: {
+			type: Number
+		}
+	},
 	images: [
 		{
 			type: String

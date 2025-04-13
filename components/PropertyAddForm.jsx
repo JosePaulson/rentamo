@@ -1,8 +1,18 @@
 'use client'
 import Image from "next/image"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Spinner from "./Spinner"
+import { AiFillCloseCircle } from "react-icons/ai";
+import PropertyMap from "./PropertyMap"
 
 const PropertyAddForm = ({ state = null }) => {
+	const router = useRouter()
+
+	const [isLoading, setIsLoading] = useState(false)
+	const [cloudImgs, setCloudImgs] = useState([])
+	const [lngLat, setLngLat] = useState()
+	console.log(lngLat)
 
 	const [fields, setFields] = useState({
 		property_type: 'Apartment',
@@ -29,11 +39,13 @@ const PropertyAddForm = ({ state = null }) => {
 			seller_phone: '9876543210',
 		},
 		images: [],
-		cloudImgs: []
 	})
 
 	useEffect(() => {
-		if (state !== null) setFields({ ...state, images: [], cloudImgs: state.images })
+		if (state !== null) {
+			setFields({ ...state, images: [] })
+			setCloudImgs([...state.images])
+		}
 	}, [state])
 
 	function handleChange(e) {
@@ -88,8 +100,52 @@ const PropertyAddForm = ({ state = null }) => {
 		}))
 	}
 
+	async function handleSubmit(e) {
+		setIsLoading(true)
+		e.preventDefault()
+		// convert image blob to base64 string
+		let imagesBase64 = []
+		if (fields.images.length) {
+			for (const image of fields.images) {
+				const imgBuffer = await image.arrayBuffer()
+				const imgArr = Array.from(new Uint8Array(imgBuffer))
+				const imgData = Buffer.from(imgArr)
+
+				// convert image data to base64
+				imagesBase64.push(imgData.toString('base64'))
+			}
+		}
+
+		try {
+			if (state) {
+				const res = await fetch('/api/properties', {
+					method: 'PUT',
+					headers: {
+						"Content-Type": "multipart/form-data",
+					},
+					body: JSON.stringify({ ...fields, images: imagesBase64, cloudImgs })
+				})
+				if (res) router.push(`/properties/${state?._id}`)
+			} else {
+				const res = await fetch('/api/properties', {
+					method: 'POST',
+					headers: {
+						"Content-Type": "multipart/form-data",
+					},
+					body: JSON.stringify({ ...fields, images: imagesBase64, lngLat })
+				})
+				const property = await res.json()
+				router.push(`/properties/${property._id}`)
+			}
+		} catch (error) {
+			console.log(error)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
 	return (
-		<form action='/api/properties' method="POST" encType="multipart/form-data">
+		<form onSubmit={handleSubmit}>
 			<h2 className='mb-6 text-3xl font-semibold text-center'>
 				Add Property
 			</h2>
@@ -195,7 +251,9 @@ const PropertyAddForm = ({ state = null }) => {
 					placeholder='Zipcode'
 				/>
 			</div>
-
+			<div className="py-5">
+				<PropertyMap draggable locatePin setLngLat={setLngLat} />
+			</div>
 			<div className='flex flex-wrap mb-4'>
 				<div className='w-full pr-2 sm:w-1/3'>
 					<label
@@ -547,17 +605,14 @@ const PropertyAddForm = ({ state = null }) => {
 			</div>
 
 			<div className="flex gap-2 flex-nowrap">
-				{fields.cloudImgs.length > 0 && fields.cloudImgs.map((image, idx) => {
+				{cloudImgs.length > 0 && cloudImgs.map((image, idx) => {
 					return <div key={idx} className="relative w-32 h-24 mb-2 overflow-hidden rounded-md">
 						<Image layout='fill' sizes='100px' className="object-cover" src={image} alt='' />
 						<span onClick={() => {
-							const newImagesArr = fields.cloudImgs
+							const newImagesArr = state.images
 							newImagesArr.splice(idx, 1)
-							setFields(prev => ({
-								...prev,
-								cloudImgs: newImagesArr
-							}))
-						}} className="absolute top-0 right-0 cursor-pointer">x</span>
+							setCloudImgs([...newImagesArr])
+						}} className="absolute cursor-pointer top-[1px] right-[1px]"><AiFillCloseCircle size={20} /></span>
 					</div>
 				})}
 			</div>
@@ -573,7 +628,7 @@ const PropertyAddForm = ({ state = null }) => {
 								...prev,
 								images: newImagesArr
 							}))
-						}} className="absolute top-0 right-0 cursor-pointer">x</span>
+						}} className="absolute top-0 right-0 cursor-pointer"><AiFillCloseCircle size={20} /></span>
 					</div>
 				})}
 			</div>
@@ -592,30 +647,21 @@ const PropertyAddForm = ({ state = null }) => {
 					className='w-full px-3 py-2 border rounded'
 					accept='image/*'
 					multiple
-					required
+					required={state ? false : true}
 				/>
 			</div>
-			<div className='mb-4'>
-				<label
-					htmlFor='images'
-					className='block mb-2 font-bold text-gray-700'
-				>
-					Images (Select up to 4 images)
-				</label>
-				<input
-					id='cloudImgs'
-					name='cloudImgs'
-					value={JSON.stringify(fields.cloudImgs)}
-					className='hidden w-full px-3 py-2 border rounded'
-				/>
-			</div>
-
 			<div>
 				<button
-					className='w-full px-4 py-2 font-bold text-white bg-green-700 rounded-full hover:bg-green-600 focus:outline-none focus:shadow-outline'
+					className='flex items-center justify-center w-full gap-2 px-4 py-2 font-bold text-white bg-green-700 rounded-full hover:bg-green-600 focus:outline-none focus:shadow-outline'
 					type='submit'
 				>
-					<i className='mr-2 fas fa-plus-circle'></i> Add Property
+					<Spinner
+						color='#f2f2f2'
+						loading={isLoading}
+						margin={0}
+						size={20}
+						aria-label='Loading Spinner'
+					/> {state && isLoading ? 'Updating' : isLoading ? 'Adding' : state ? 'Update' : 'Add'} Property
 				</button>
 			</div>
 		</form>
