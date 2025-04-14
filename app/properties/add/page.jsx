@@ -1,5 +1,4 @@
 import PropertyAddForm from "@/components/PropertyAddForm";
-
 const AddPropertyPage = ({ searchParams }) => {
   return (
     <section className='bg-blue-50'>

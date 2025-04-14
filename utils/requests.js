@@ -60,4 +60,34 @@ const deleteUserProperty = async (propertyId) => {
 	}
 }
 
-export { fetchProperties, fetchProperty, fetchUserProperties, deleteUserProperty }
+//Bookmarks
+const toggleBookmark = async (propertyId) => {
+	try {
+		if (!apiDomain) return null
+
+		const response = await fetch(`${apiDomain}/bookmarks/${propertyId}`, { method: 'PUT' })
+		if (!response.ok) throw new Error('Error Bookmarking')
+		const res = await response.json()
+		return res
+	} catch (error) {
+		console.log(error)
+		return 'Error adding/removing bookmark'
+	}
+}
+
+// Fetch saved properties
+const fetchSavedProperties = async (userId) => {
+	try {
+		if (!apiDomain) return []
+
+		const response = await fetch(`${apiDomain}/bookmarks/${userId}`)
+		if (!response.ok) throw new Error("Sorry fetching data failed.")
+
+		return response.json()
+	} catch (error) {
+		console.log(error)
+		return []
+	}
+}
+
+export { fetchProperties, fetchProperty, fetchUserProperties, deleteUserProperty, toggleBookmark, fetchSavedProperties }

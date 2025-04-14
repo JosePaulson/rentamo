@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaBed, FaBath, FaRulerCombined, FaMoneyBill, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaBed, FaBath, FaRulerCombined, FaMoneyBill, FaMapMarkerAlt, FaBookmark } from 'react-icons/fa';
+import Spinner from './Spinner';
 
-const PropertyCard = ({ property }) => {
+const PropertyCard = ({ property, handleUnsave = null, isLoadingUnsave }) => {
 	return (
 		<div className='relative overflow-hidden shadow-md rounded-xl'>
 			<div className='relative w-full h-60'>
@@ -23,6 +24,7 @@ const PropertyCard = ({ property }) => {
 				<h3 className='absolute top-[10px] right-[10px] bg-white px-4 py-2 rounded-lg text-green-700 font-bold text-right md:text-center lg:text-right'>
 					${property.rates.monthly ? property.rates.monthly + '/month' : property.rates.weekly ? property.rates.weekly + '/week' : property.rates.nightly + '/night'}
 				</h3>
+				{handleUnsave && <button onClick={() => handleUnsave(property._id)} className='absolute top-[10px] left-[10px] bg-white px-4 py-2 rounded-lg text-red-700 font-semibold text-right md:text-center lg:text-right flex gap-1 items-center'>{isLoadingUnsave ? <Spinner margin='0px' size={15} color='#222a' /> : <FaBookmark />} {isLoadingUnsave ? 'Removing' : 'Unsave'}</button>}
 
 				<div className='flex justify-center gap-4 mb-4 text-gray-500'>
 					<p>

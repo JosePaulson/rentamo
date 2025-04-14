@@ -1,6 +1,6 @@
 'use client'
 import React, { useRef, useEffect, useState } from 'react';
-import * as maptilersdk from '@maptiler/sdk';
+import * as maptilersdk from '@maptiler/sdk'
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
 export default function PropertyMap({ draggable = false, locatePin = false, currentLoc, setLngLat = null }) {
@@ -8,7 +8,7 @@ export default function PropertyMap({ draggable = false, locatePin = false, curr
 	const mapContainer = useRef(null);
 	const map = useRef(null);
 	const zoom = locatePin ? 17 : 14;
-	maptilersdk.config.apiKey = process.env.NEXT_PUBLIC_MAPTILER_API_KEY;
+	maptilersdk.config.apiKey = process.env.NEXT_PUBLIC_MAPTILER_API_KEY
 
 	useEffect(() => {
 		async function getLocation() {
@@ -23,14 +23,12 @@ export default function PropertyMap({ draggable = false, locatePin = false, curr
 				console.error("Could not get location:", error);
 			}
 		}
-
 		locatePin ? getLocation() : setLoc(currentLoc)
 	}, [])
 	useEffect(() => {
 		if (map.current) return; // stops map from intializing more than once
 
 		if (loc?.longitude && loc?.latitude) {
-
 			map.current = new maptilersdk.Map({
 				container: mapContainer.current,
 				style: maptilersdk.MapStyle.STREETS,
@@ -50,12 +48,11 @@ export default function PropertyMap({ draggable = false, locatePin = false, curr
 					let lngLat = marker.getLngLat()
 					setLngLat({ longitude: lngLat.lng, latitude: lngLat.lat })
 				}
-
 				marker.on('dragend', handleDragEnd)
 			}
 		}
 
-	}, [loc.longitude, loc.latitude, zoom]);
+	}, [loc.latitude, loc.latitude, zoom]);
 
 
 

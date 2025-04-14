@@ -12,7 +12,6 @@ const PropertyAddForm = ({ state = null }) => {
 	const [isLoading, setIsLoading] = useState(false)
 	const [cloudImgs, setCloudImgs] = useState([])
 	const [lngLat, setLngLat] = useState()
-	console.log(lngLat)
 
 	const [fields, setFields] = useState({
 		property_type: 'Apartment',
@@ -45,6 +44,7 @@ const PropertyAddForm = ({ state = null }) => {
 		if (state !== null) {
 			setFields({ ...state, images: [] })
 			setCloudImgs([...state.images])
+			setLngLat({ ...state.lngLat })
 		}
 	}, [state])
 
@@ -123,7 +123,7 @@ const PropertyAddForm = ({ state = null }) => {
 					headers: {
 						"Content-Type": "multipart/form-data",
 					},
-					body: JSON.stringify({ ...fields, images: imagesBase64, cloudImgs })
+					body: JSON.stringify({ ...fields, images: imagesBase64, cloudImgs, lngLat })
 				})
 				if (res) router.push(`/properties/${state?._id}`)
 			} else {
@@ -252,7 +252,7 @@ const PropertyAddForm = ({ state = null }) => {
 				/>
 			</div>
 			<div className="py-5">
-				<PropertyMap draggable locatePin setLngLat={setLngLat} />
+				<PropertyMap draggable locatePin={state ? false : true} currentLoc={state.lngLat} setLngLat={setLngLat} />
 			</div>
 			<div className='flex flex-wrap mb-4'>
 				<div className='w-full pr-2 sm:w-1/3'>

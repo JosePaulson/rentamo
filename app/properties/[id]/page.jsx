@@ -2,17 +2,30 @@
 import PropertyHeaderImage from '@/components/PropertyHeaderImage'
 import PropertyMap from '@/components/PropertyMap'
 import Spinner from '@/components/Spinner'
-import { fetchProperty } from '@/utils/requests'
+import { fetchProperty, toggleBookmark } from '@/utils/requests'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { FaArrowLeft, FaBath, FaBed, FaBookmark, FaCheck, FaMapMarker, FaPaperPlane, FaRulerCombined, FaShare, FaTimes } from 'react-icons/fa'
+import { toast } from 'react-toastify'
 
 const propertyPage = () => {
 	const [property, setProperty] = useState()
 	const [isLoading, setIsLoading] = useState(true)
+	const [loadingBookmarks, setLoadingBookmarks] = useState(false)
+	const [bookmarks, setBookmarks] = useState()
 	const { id } = useParams()
+
+	useEffect(() => {
+		const fetchBookmarks = async () => {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_API_DOMAIN}/users`)
+			const { bookmarks } = await res.json()
+			setBookmarks(bookmarks)
+		}
+		fetchBookmarks()
+	}, [])
+
 	useEffect(() => {
 		const fetchPropertyById = async (id) => {
 			try {
@@ -27,7 +40,23 @@ const propertyPage = () => {
 
 		fetchPropertyById(id)
 
-	}, [id])
+	}, [id, bookmarks])
+
+
+	async function handleBookmark(propertyId) {
+		setLoadingBookmarks(true)
+		try {
+			let { message, bookmarks } = await toggleBookmark(propertyId)
+			setBookmarks(bookmarks)
+			toast(message)
+		} catch (error) {
+			console.error(error)
+		} finally {
+			setLoadingBookmarks(false)
+		}
+	}
+
+
 
 	if (!property && !isLoading)
 		return (
@@ -153,9 +182,12 @@ const propertyPage = () => {
 								{/* <!-- Sidebar --> */}
 								<aside className='space-y-4'>
 									<div>
-										<button className='flex items-center justify-center w-full px-4 py-2 font-bold text-white bg-green-600 rounded-full hover:bg-green-700'>
-											<FaBookmark className='mr-2' />
-											Bookmark Property
+										<button onClick={() => handleBookmark(property._id)} className='w-full px-4 py-2 font-bold text-white bg-green-600 rounded-full hover:bg-green-700'>
+											{loadingBookmarks ? <Spinner size={24} margin='0' color='#fff' /> : <div className='flex items-center justify-center'>
+
+												<FaBookmark className='mr-2' />
+												{!loadingBookmarks && bookmarks?.includes(property._id) ? 'Saved Property' : 'Bookmark Property'}
+											</div>}
 										</button>
 									</div>
 									<div>
