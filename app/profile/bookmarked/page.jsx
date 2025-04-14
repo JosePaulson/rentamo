@@ -10,6 +10,7 @@ const savedPropertiesPage = () => {
 	const [properties, setProperties] = useState([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [isLoadingUnsave, setIsLoadingUnsave] = useState(false)
+	const [reload, setReload] = useState(false)
 	const { data: session } = useSession()
 	useEffect(() => {
 		async function fetchBookmarks(userId) {
@@ -27,13 +28,13 @@ const savedPropertiesPage = () => {
 		if (session && session?.user?.id) {
 			fetchBookmarks(session.user.id)
 		}
-	}, [session])
+	}, [session, reload])
 
 	async function handleBookmark(propertyId) {
 		setIsLoadingUnsave(true)
-		const message = await toggleBookmark(propertyId)
+		const { message } = await toggleBookmark(propertyId)
+		setReload(!reload)
 		toast(message)
-		setProperties([])
 		setIsLoadingUnsave(false)
 	}
 

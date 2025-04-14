@@ -19,7 +19,7 @@ export const PUT = async (request, { params }) => {
 			let updatedBookmarks
 			let action
 			if (bookmarks.includes(params.id)) {
-				updatedBookmarks = bookmarks.filter((id, idx) => bookmarks[idx] !== id)
+				updatedBookmarks = bookmarks.filter(bookmark => bookmark != params.id)
 				action = 'removed from bookmarks'
 			} else {
 				updatedBookmarks = [...bookmarks, params.id]
