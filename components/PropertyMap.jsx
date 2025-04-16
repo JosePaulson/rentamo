@@ -58,7 +58,7 @@ export default function PropertyMap({ draggable = false, locatePin = false, curr
 
 
 	return (
-		<div className="relative w-full h-[50vh]">
+		<div className="relative w-full h-[36vh] sm:h-[50vh]">
 			<div ref={mapContainer} className="absolute w-full h-full" />
 		</div>
 	);

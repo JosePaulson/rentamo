@@ -3,11 +3,13 @@ import PropertyHeaderImage from '@/components/PropertyHeaderImage'
 import PropertyMap from '@/components/PropertyMap'
 import Spinner from '@/components/Spinner'
 import { fetchProperty, toggleBookmark } from '@/utils/requests'
+import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { FaArrowLeft, FaBath, FaBed, FaBookmark, FaCheck, FaMapMarker, FaPaperPlane, FaRulerCombined, FaShare, FaTimes } from 'react-icons/fa'
+import { EmailIcon, EmailShareButton, FacebookIcon, FacebookShareButton, TwitterIcon, TwitterShareButton, WhatsappIcon, WhatsappShareButton } from 'react-share'
 import { toast } from 'react-toastify'
 
 const propertyPage = () => {
@@ -16,15 +18,24 @@ const propertyPage = () => {
 	const [loadingBookmarks, setLoadingBookmarks] = useState(false)
 	const [bookmarks, setBookmarks] = useState()
 	const { id } = useParams()
+	const { data: session } = useSession()
+
+	const shareUrl = `${process.env.NEXT_PUBLIC_DOMAIN}/properties/${id}`
 
 	useEffect(() => {
+		setLoadingBookmarks(true)
+		if (!session) {
+			setLoadingBookmarks(false)
+			return
+		}
 		const fetchBookmarks = async () => {
 			const res = await fetch(`${process.env.NEXT_PUBLIC_API_DOMAIN}/users`)
 			const { bookmarks } = await res.json()
 			setBookmarks(bookmarks)
+			setLoadingBookmarks(false)
 		}
 		fetchBookmarks()
-	}, [])
+	}, [session])
 
 	useEffect(() => {
 		const fetchPropertyById = async (id) => {
@@ -44,6 +55,10 @@ const propertyPage = () => {
 
 
 	async function handleBookmark(propertyId) {
+		if (!session) {
+			toast('Please login to bookmark a property')
+			return
+		}
 		setLoadingBookmarks(true)
 		try {
 			let { message, bookmarks } = await toggleBookmark(propertyId)
@@ -169,7 +184,7 @@ const propertyPage = () => {
 											))}
 										</ul>
 									</div>
-									<div className='p-6 mt-6 bg-white rounded-lg shadow-md'>
+									<div className='mt-6 overflow-hidden bg-white rounded-lg shadow-md'>
 										<PropertyMap currentLoc={property.lngLat} />
 									</div>
 									{property.images.length > 1 && <div className='p-6 mt-6 bg-white rounded-lg shadow-md'>
@@ -182,18 +197,48 @@ const propertyPage = () => {
 								{/* <!-- Sidebar --> */}
 								<aside className='space-y-4'>
 									<div>
-										<button onClick={() => handleBookmark(property._id)} className='w-full px-4 py-2 font-bold text-white bg-green-600 rounded-full hover:bg-green-700'>
-											{loadingBookmarks ? <Spinner size={24} margin='0' color='#fff' /> : <div className='flex items-center justify-center'>
-
-												<FaBookmark className='mr-2' />
-												{!loadingBookmarks && bookmarks?.includes(property._id) ? 'Saved Property' : 'Bookmark Property'}
-											</div>}
-										</button>
+										{
+											loadingBookmarks ? <div className='px-4 py-2'>
+												<Spinner size={24} margin='0' color='#222a' />
+											</div> :
+												<button onClick={() => handleBookmark(property._id)} className={`w-full px-4 py-2 font-bold text-white rounded-full ${!loadingBookmarks && bookmarks?.includes(property._id) ? "bg-gray-900 hover:bg-gray-700" : "bg-green-600 hover:bg-green-700"}`}>
+													<div className='flex items-center justify-center'>
+														<FaBookmark className='mr-2' />
+														{!loadingBookmarks && bookmarks?.includes(property._id) ? 'Saved Property' : 'Bookmark Property'}
+													</div>
+												</button>
+										}
 									</div>
-									<div>
-										<button className='flex items-center justify-center w-full px-4 py-2 font-bold text-white bg-orange-500 rounded-full hover:bg-orange-600'>
-											<FaShare className='mr-2' /> Share Property
-										</button>
+									<h5 className='font-semibold text-center'>Share Property</h5>
+									<div className='flex items-center justify-center gap-2'>
+										<FacebookShareButton
+											url={shareUrl}
+											quote={property.name}
+											hashtag={`#${property.type}ForRent`}
+										>
+											<FacebookIcon className='rounded-full' size={32} />
+										</FacebookShareButton>
+										<TwitterShareButton
+											url={shareUrl}
+											title={property.name}
+											hashtag={`#${property.type}ForRent`}
+										>
+											<TwitterIcon className='rounded-full' size={32} />
+										</TwitterShareButton>
+										<WhatsappShareButton
+											url={shareUrl}
+											title={property.name}
+											separator=':: '
+										>
+											<WhatsappIcon className='rounded-full' size={32} />
+										</WhatsappShareButton>
+										<EmailShareButton
+											url={shareUrl}
+											subject={property.name}
+											body={`Check out this listing, ${shareUrl}`}
+										>
+											<EmailIcon className='rounded-full' size={32} />
+										</EmailShareButton>
 									</div>
 
 									{/* <!-- Contact Form --> */}

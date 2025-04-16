@@ -252,7 +252,7 @@ const PropertyAddForm = ({ state = null }) => {
 				/>
 			</div>
 			<div className="py-5">
-				<PropertyMap draggable locatePin={state ? false : true} currentLoc={state.lngLat} setLngLat={setLngLat} />
+				<PropertyMap draggable locatePin={state ? false : true} currentLoc={state ? state.lngLat : null} setLngLat={setLngLat} />
 			</div>
 			<div className='flex flex-wrap mb-4'>
 				<div className='w-full pr-2 sm:w-1/3'>
