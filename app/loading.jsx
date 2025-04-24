@@ -6,7 +6,7 @@ const override = {
 	margin: '100px auto',
 };
 
-const loading = ({ loading }) => {
+const LoadingPage = ({ loading }) => {
 	return (
 		<div className='flex items-center justify-center h-screen'>
 			<ClipLoader
@@ -19,4 +19,4 @@ const loading = ({ loading }) => {
 		</div>
 	);
 };
-export default loading;
+export default LoadingPage;

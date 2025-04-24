@@ -25,7 +25,6 @@ export const POST = async (request) => {
 		return new Response('Unauthorized', { status: 401 })
 	}
 	const formData = await request.json()
-	// console.log(formData)
 	const propertyData = {
 		...formData,
 		owner: session.user.id,
